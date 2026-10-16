@@ -1,0 +1,23 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Only signed-in shop staff can touch anything.
+    function signedIn() { return request.auth != null; }
+
+    match /categories/{id} {
+      allow read, write: if signedIn();
+    }
+
+    // Invoices are permanent records: can be created and read, never edited or deleted.
+    match /sales/{id} {
+      allow read, create: if signedIn();
+      allow update, delete: if false;
+    }
+
+    match /stockAdjustments/{id} {
+      allow read, create: if signedIn();
+      allow update, delete: if false;
+    }
+  }
+}
