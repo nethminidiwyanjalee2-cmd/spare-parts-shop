@@ -35,17 +35,17 @@ export default function ReportsPage() {
 
       <div className="card" style={{ marginBottom: 20 }}>
         <h2 style={{ fontSize: 15, margin: '0 0 6px' }}>Daily Sales (last 14 days)</h2>
-        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, height: 180, paddingTop: 10 }}>
-          {daily.length === 0 && <div className="empty-state">No sales data yet</div>}
-          {daily.map((d) => (
-            <div key={d.day} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-              <div title={money(d.total)} className="mini-chart-bar" style={{ width: '100%', height: Math.max(4, (d.total / maxVal) * 150) }} />
-              <div style={{ fontSize: 10, color: 'var(--muted)', writingMode: 'vertical-rl', transform: 'rotate(180deg)', height: 40 }}>
-                {new Date(d.day + 'T00:00:00').toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
-              </div>
-            </div>
-          ))}
-        </div>
+        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, height: 210, paddingTop: 10 }}>
+            {daily.length === 0 && <div className="empty-state">No sales data yet</div>}
+            {daily.map((d) => (
+         <div key={d.day} style={{ flex: '0 1 64px', minWidth: 28, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+         <div title={money(d.total)} className="mini-chart-bar" style={{ width: '100%', height: Math.max(4, (d.total / maxVal) * 150) }} />
+         <div style={{ fontSize: 10, color: 'var(--muted)', writingMode: 'vertical-rl', transform: 'rotate(180deg)', height: 40 }}>
+        {new Date(d.day + 'T00:00:00').toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
+      </div>
+    </div>
+  ))}
+</div>
       </div>
 
       <div className="grid-2">
