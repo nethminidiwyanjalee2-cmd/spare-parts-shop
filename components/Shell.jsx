@@ -1,4 +1,5 @@
 'use client';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { signOut } from 'firebase/auth';
@@ -17,6 +18,49 @@ export default function Shell({ children }) {
   const path = usePathname();
   const router = useRouter();
   const online = useOnline();
+  const [collapsed, setCollapsed] = useState(false);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('sp_sidebar_collapsed');
+      if (saved !== null) {
+        setCollapsed(saved === 'true');
+      } else if (window.innerWidth < 900) {
+        setCollapsed(true);
+      }
+    } catch {
+      // LocalStorage access may fail in restricted environments
+    }
+
+    const handleKeyDown = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
+        const activeTag = document.activeElement?.tagName?.toLowerCase();
+        if (activeTag !== 'input' && activeTag !== 'textarea') {
+          e.preventDefault();
+          setCollapsed((prev) => {
+            const next = !prev;
+            try {
+              localStorage.setItem('sp_sidebar_collapsed', String(next));
+            } catch {}
+            return next;
+          });
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  function toggleSidebar() {
+    setCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem('sp_sidebar_collapsed', String(next));
+      } catch {}
+      return next;
+    });
+  }
 
   async function logout() {
     await signOut(fb().auth);
@@ -24,28 +68,96 @@ export default function Shell({ children }) {
   }
 
   return (
-    <div className="app-shell">
-      <aside className="sidebar">
-        <div className="brand">
-          <div className="brand-mark">SP</div>
-          <div>
-            <div className="brand-title">Spare Parts</div>
-            <div className="brand-sub">Shop Manager</div>
+    <div className={`app-shell ${collapsed ? 'sidebar-is-collapsed' : ''}`}>
+      <aside className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
+        <div className="sidebar-header">
+          <div
+            className="brand"
+            onClick={collapsed ? toggleSidebar : undefined}
+            role={collapsed ? 'button' : undefined}
+            tabIndex={collapsed ? 0 : undefined}
+            aria-label={collapsed ? 'Expand sidebar' : undefined}
+            onKeyDown={
+              collapsed
+                ? (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      toggleSidebar();
+                    }
+                  }
+                : undefined
+            }
+            style={{ cursor: collapsed ? 'pointer' : 'default' }}
+          >
+            <div className="brand-mark" title="Spare Parts Shop Manager">
+              SP
+            </div>
+            <div className="brand-info">
+              <div className="brand-title">Spare Parts</div>
+              <div className="brand-sub">Shop Manager</div>
+            </div>
           </div>
+          <button
+            type="button"
+            className="sidebar-toggle-btn"
+            onClick={toggleSidebar}
+            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            aria-expanded={!collapsed}
+            title={collapsed ? 'Expand sidebar (Ctrl+B)' : 'Collapse sidebar (Ctrl+B)'}
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              {collapsed ? (
+                <polyline points="9 18 15 12 9 6" />
+              ) : (
+                <polyline points="15 18 9 12 15 6" />
+              )}
+            </svg>
+          </button>
         </div>
+
         <nav className="nav">
           {NAV.map((n) => (
-            <Link key={n.href} href={n.href} className={`nav-link ${path === n.href ? 'active' : ''}`}>
-              <span className="nav-icon">{n.icon}</span> {n.label}
+            <Link
+              key={n.href}
+              href={n.href}
+              className={`nav-link ${path === n.href ? 'active' : ''}`}
+              data-tooltip={n.label}
+              aria-label={n.label}
+            >
+              <span className="nav-icon">{n.icon}</span>
+              <span className="nav-label">{n.label}</span>
             </Link>
           ))}
         </nav>
-        <div style={{ marginTop: 'auto', paddingTop: 16, borderTop: '1px solid #3a4150' }}>
-          <Link href="/change-password" className={`nav-link ${path === '/change-password' ? 'active' : ''}`}>
-            <span className="nav-icon">&#9881;</span> Change Password
+
+        <div className="sidebar-footer">
+          <Link
+            href="/change-password"
+            className={`nav-link ${path === '/change-password' ? 'active' : ''}`}
+            data-tooltip="Change Password"
+            aria-label="Change Password"
+          >
+            <span className="nav-icon">&#9881;</span>
+            <span className="nav-label">Change Password</span>
           </Link>
-          <button className="nav-link" onClick={logout}>
-            <span className="nav-icon">&#128274;</span> Log Out
+          <button
+            type="button"
+            className="nav-link"
+            onClick={logout}
+            data-tooltip="Log Out"
+            aria-label="Log Out"
+          >
+            <span className="nav-icon">&#128274;</span>
+            <span className="nav-label">Log Out</span>
           </button>
         </div>
       </aside>

@@ -6,12 +6,14 @@ import { useToast } from '@/lib/ui';
 import { money } from '@/lib/helpers';
 import { adjustStock, createItem, deleteItem, updateItem } from '@/lib/actions';
 import Modal from '@/components/Modal';
+import { useAuth } from '@/lib/auth';
 
 const EMPTY = { name: '', vehicleType: '', barcode: '', price: '', costPrice: '', stockQty: '', reorderLevel: '', notes: '' };
 
 export default function InventoryPage() {
   const { items, allItems, ready } = useItems();
   const toast = useToast();
+  const { isManager } = useAuth();
   const [search, setSearch] = useState('');
   const [form, setForm] = useState(null);          // null = closed; otherwise {id?, ...fields}
   const [stockFor, setStockFor] = useState(null);
@@ -38,6 +40,7 @@ export default function InventoryPage() {
   const setF = (k) => (e) => setForm({ ...form, [k]: e.target.value });
 
   async function save() {
+    if (!isManager) return;
     if (!form.name.trim()) return toast('Please enter an item name', 'error');
     try {
       if (form.id) { await updateItem(form.id, form); toast('Item updated', 'success'); }
@@ -47,11 +50,13 @@ export default function InventoryPage() {
   }
 
   async function remove(item) {
+    if (!isManager) return;
     if (!confirm(`Remove "${item.name}" from inventory?`)) return;
     try { await deleteItem(item.id); toast('Item removed', 'success'); } catch (e) { toast(e.message, 'error'); }
   }
 
   async function submitStock() {
+    if (!isManager) return;
     const change = parseInt(stock.change, 10);
     if (!change) return toast('Enter a quantity to add or remove', 'error');
     try {
@@ -75,12 +80,18 @@ export default function InventoryPage() {
   return (
     <>
       <h1 className="page-title">Inventory</h1>
-      <p className="page-sub">Manage your product categories, prices, stock levels and barcodes</p>
+      <p className="page-sub">
+        {isManager
+          ? 'Manage your product categories, prices, stock levels and barcodes'
+          : 'Search items, check stock and print barcode labels'}
+      </p>
 
       <div className="toolbar">
         <input type="text" className="search-box" placeholder="Search by name, barcode or vehicle type..."
                value={search} onChange={(e) => setSearch(e.target.value)} />
-        <button className="btn btn-primary" onClick={() => setForm({ ...EMPTY })}>+ Add New Item</button>
+        {isManager && (
+          <button className="btn btn-primary" onClick={() => setForm({ ...EMPTY })}>+ Add New Item</button>
+        )}
       </div>
 
       <div className="card" style={{ overflowX: 'auto' }}>
@@ -100,14 +111,20 @@ export default function InventoryPage() {
                   <td><span className={`badge ${low ? 'badge-red' : 'badge-green'}`}>{item.stockQty}</span></td>
                   <td>{low ? <span className="badge badge-amber">Low Stock</span> : <span className="badge badge-gray">OK</span>}</td>
                   <td style={{ whiteSpace: 'nowrap' }}>
+                    {/* Everyone can print labels */}
                     <button className="btn btn-sm btn-secondary" onClick={() => setBarcodeFor(item)}>Barcode</button>{' '}
-                    <button className="btn btn-sm btn-secondary" onClick={() => { setStockFor(item); setStock({ change: '', reason: '' }); }}>Stock</button>{' '}
-                    <button className="btn btn-sm btn-secondary" onClick={() => setForm({
-                      id: item.id, name: item.name, vehicleType: item.vehicleType || '', barcode: item.barcode,
-                      price: item.price, costPrice: item.costPrice, stockQty: item.stockQty,
-                      reorderLevel: item.reorderLevel, notes: item.notes || '',
-                    })}>Edit</button>{' '}
-                    <button className="btn btn-sm btn-danger" onClick={() => remove(item)}>Delete</button>
+                    {/* Manager only */}
+                    {isManager && (
+                      <>
+                        <button className="btn btn-sm btn-secondary" onClick={() => { setStockFor(item); setStock({ change: '', reason: '' }); }}>Stock</button>{' '}
+                        <button className="btn btn-sm btn-secondary" onClick={() => setForm({
+                          id: item.id, name: item.name, vehicleType: item.vehicleType || '', barcode: item.barcode,
+                          price: item.price, costPrice: item.costPrice, stockQty: item.stockQty,
+                          reorderLevel: item.reorderLevel, notes: item.notes || '',
+                        })}>Edit</button>{' '}
+                        <button className="btn btn-sm btn-danger" onClick={() => remove(item)}>Delete</button>
+                      </>
+                    )}
                   </td>
                 </tr>
               );
@@ -115,12 +132,16 @@ export default function InventoryPage() {
           </tbody>
         </table>
         {ready && filtered.length === 0 && (
-          <div className="empty-state">{items.length === 0 ? 'No items yet. Click "Add New Item" to get started.' : 'No items match your search.'}</div>
+          <div className="empty-state">
+            {items.length === 0
+              ? (isManager ? 'No items yet. Click "Add New Item" to get started.' : 'No items yet.')
+              : 'No items match your search.'}
+          </div>
         )}
       </div>
 
-      {/* Add / Edit */}
-      <Modal open={!!form} onClose={() => setForm(null)}>
+      {/* Add / Edit (manager only) */}
+      <Modal open={isManager && !!form} onClose={() => setForm(null)}>
         {form && (
           <>
             <h2>{form.id ? 'Edit Item' : 'Add New Item'}</h2>
@@ -154,8 +175,8 @@ export default function InventoryPage() {
         )}
       </Modal>
 
-      {/* Stock adjust */}
-      <Modal open={!!stockFor} onClose={() => setStockFor(null)} width={360}>
+      {/* Stock adjust (manager only) */}
+      <Modal open={isManager && !!stockFor} onClose={() => setStockFor(null)} width={360}>
         {stockFor && (
           <>
             <h2>Adjust Stock</h2>
@@ -172,7 +193,7 @@ export default function InventoryPage() {
         )}
       </Modal>
 
-      {/* Barcode label */}
+      {/* Barcode label (everyone) */}
       <Modal open={!!barcodeFor} onClose={() => setBarcodeFor(null)} width={340} align="center">
         {barcodeFor && (
           <>
