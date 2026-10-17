@@ -6,8 +6,10 @@ import { useToast } from '@/lib/ui';
 import { money } from '@/lib/helpers';
 import { adjustStock, createItem, deleteItem, updateItem } from '@/lib/actions';
 import Modal from '@/components/Modal';
+import Pagination from '@/components/Pagination';
 import { useAuth } from '@/lib/auth';
 
+const PAGE_SIZE = 20;
 const EMPTY = { name: '', vehicleType: '', barcode: '', price: '', costPrice: '', stockQty: '', reorderLevel: '', notes: '' };
 
 export default function InventoryPage() {
@@ -15,6 +17,7 @@ export default function InventoryPage() {
   const toast = useToast();
   const { isManager } = useAuth();
   const [search, setSearch] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
   const [form, setForm] = useState(null);          // null = closed; otherwise {id?, ...fields}
   const [stockFor, setStockFor] = useState(null);
   const [stock, setStock] = useState({ change: '', reason: '' });
@@ -27,6 +30,14 @@ export default function InventoryPage() {
     return items.filter((i) =>
       [i.name, i.barcode, i.vehicleType].some((x) => (x || '').toLowerCase().includes(v)));
   }, [items, search]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+
+  const paginatedItems = useMemo(() => {
+    const start = (safeCurrentPage - 1) * PAGE_SIZE;
+    return filtered.slice(start, start + PAGE_SIZE);
+  }, [filtered, safeCurrentPage]);
 
   // Draw the barcode whenever the barcode modal opens
   useEffect(() => {
@@ -88,7 +99,7 @@ export default function InventoryPage() {
 
       <div className="toolbar">
         <input type="text" className="search-box" placeholder="Search by name, barcode or vehicle type..."
-               value={search} onChange={(e) => setSearch(e.target.value)} />
+               value={search} onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }} />
         {isManager && (
           <button className="btn btn-primary" onClick={() => setForm({ ...EMPTY })}>+ Add New Item</button>
         )}
@@ -100,7 +111,7 @@ export default function InventoryPage() {
             <tr><th>Item</th><th>Barcode</th><th>Vehicle</th><th>Price</th><th>Stock</th><th>Status</th><th></th></tr>
           </thead>
           <tbody>
-            {filtered.map((item) => {
+            {paginatedItems.map((item) => {
               const low = item.stockQty <= item.reorderLevel;
               return (
                 <tr key={item.id}>
@@ -137,6 +148,14 @@ export default function InventoryPage() {
               ? (isManager ? 'No items yet. Click "Add New Item" to get started.' : 'No items yet.')
               : 'No items match your search.'}
           </div>
+        )}
+        {ready && (
+          <Pagination
+            currentPage={safeCurrentPage}
+            totalItems={filtered.length}
+            pageSize={PAGE_SIZE}
+            onPageChange={setCurrentPage}
+          />
         )}
       </div>
 

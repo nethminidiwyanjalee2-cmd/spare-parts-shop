@@ -89,14 +89,19 @@ export default function Shell({ children }) {
             }
             style={{ cursor: collapsed ? 'pointer' : 'default' }}
           >
-            <div className="brand-mark" title="Spare Parts Shop Manager">
-              SP
+            <div className="brand-mark" title="Gamage Motors">
+              GM
             </div>
-            <div className="brand-info">
-              <div className="brand-title">Spare Parts</div>
-              <div className="brand-sub">Shop Manager</div>
+            <div className="brand-info" style={{ minWidth: 0, flex: 1, lineHeight: 1.25 }}>
+              <div className="brand-title" style={{ fontSize: '14px', fontWeight: '600' }}>
+                Gamage
+              </div>
+              <div className="brand-title" style={{ fontSize: '14px', fontWeight: '600' }}>
+                Motors
+              </div>
             </div>
           </div>
+
           <button
             type="button"
             className="sidebar-toggle-btn"

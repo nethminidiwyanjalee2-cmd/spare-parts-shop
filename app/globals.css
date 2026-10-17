@@ -485,8 +485,118 @@ a.nav-link { text-decoration: none; }
 .login-wrap { display:flex; align-items:center; justify-content:center; min-height:100vh; }
 .login-card { width:340px; background:#fff; border:1px solid var(--line); border-radius:12px; padding:32px; }
 
+/* Pagination */
+.pagination-bar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+@media (min-width: 640px) {
+  .pagination-bar {
+    flex-direction: row;
+  }
+}
+
+.pagination-summary {
+  font-size: 13.5px;
+  color: var(--muted);
+}
+
+.pagination-summary span,
+.pagination-summary strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.pagination-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pagination-counter {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink);
+  padding: 0 4px;
+  white-space: nowrap;
+}
+
+.pagination-btn {
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 7px;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--ink);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, opacity 0.15s;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background: #f7f6f2;
+}
+
+.pagination-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+@page {
+  size: A5 portrait;
+  margin: 0;
+}
+
 @media print {
-  body * { visibility: hidden; }
-  .print-area, .print-area * { visibility: visible; }
-  .print-area { position: fixed; left: 0; top: 0; width: 100%; padding: 12px; }
+  /* ── 1. Hide everything on the page ── */
+  body * {
+    visibility: hidden !important;
+  }
+
+  /* ── 2. The modal overlay/container create a new stacking context
+     (position:fixed + overflow:auto) that traps position:fixed children.
+     Reset them at print time so .print-area can escape to the page. ── */
+  .modal-overlay,
+  .modal {
+    position: static !important;
+    overflow: visible !important;
+    background: transparent !important;
+    inset: auto !important;
+    display: block !important;
+    width: auto !important;
+    max-width: none !important;
+    max-height: none !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+
+  /* ── 3. Stamp the receipt at the top-left of the A5 sheet ── */
+  .print-area,
+  .print-area * {
+    visibility: visible !important;
+  }
+
+  .print-area {
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    padding: 10mm !important;
+    box-sizing: border-box !important;
+    background: #fff !important;
+    color: #000 !important;
+  }
+
+  /* ── 4. Make sure modal-actions (Print / New Bill buttons) don't print ── */
+  .modal-actions {
+    display: none !important;
+  }
 }

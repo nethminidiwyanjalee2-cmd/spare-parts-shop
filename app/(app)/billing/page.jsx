@@ -152,23 +152,55 @@ export default function BillingPage() {
       <Modal open={!!receipt} width={380}>
         {receipt && (
           <>
+            <h2>Sale Completed ✓</h2>
             <div className="print-area" style={{ fontSize: 13.5 }}>
-              <h2>Sale Completed ✓</h2>
+              <img
+                src="/logo.jpeg"
+                alt="Shop Logo"
+                style={{
+                  display: 'block',
+                  margin: '0 auto 10px',
+                  maxHeight: 80,
+                  maxWidth: '60%',
+                  objectFit: 'contain',
+                  filter: 'invert(1)',
+                }}
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
               <p><strong>Invoice:</strong> {receipt.invoiceNo}</p>
               <p><strong>Date:</strong> {fmtDateTime(receipt.createdAt)}</p>
               {receipt.customerName && <p><strong>Customer:</strong> {receipt.customerName}</p>}
               <p><strong>Payment:</strong> {receipt.paymentMethod}</p>
               <table style={{ margin: '10px 0' }}>
-                <thead><tr><th>Item</th><th>Qty</th><th>Amount</th></tr></thead>
+                <thead>
+                  <tr>
+                    <th>Item</th>
+                    <th style={{ textAlign: 'right' }}>Qty</th>
+                    <th style={{ textAlign: 'right' }}>Price</th>
+                    <th style={{ textAlign: 'right' }}>Amount</th>
+                  </tr>
+                </thead>
                 <tbody>
                   {receipt.items.map((i) => (
-                    <tr key={i.categoryId}><td>{i.name}</td><td>{i.quantity}</td><td>{money(i.lineTotal)}</td></tr>
+                    <tr key={i.categoryId}>
+                      <td>{i.name}</td>
+                      <td style={{ textAlign: 'right' }}>{i.quantity}</td>
+                      <td style={{ textAlign: 'right' }}>{money(i.unitPrice)}</td>
+                      <td style={{ textAlign: 'right' }}>{money(i.lineTotal)}</td>
+                    </tr>
                   ))}
                 </tbody>
               </table>
               <div className="total-row"><span>Subtotal</span><span>{money(receipt.subtotal)}</span></div>
               <div className="total-row"><span>Discount</span><span>{money(receipt.discount)}</span></div>
               <div className="total-row grand"><span>Total</span><span>{money(receipt.totalAmount)}</span></div>
+              <div style={{ borderTop: '1px dashed var(--line)', marginTop: 14, paddingTop: 10, textAlign: 'center' }}>
+                <div style={{ fontWeight: 'bold' }}>Thank you for choosing us. Have a great day!</div>
+                <div style={{ fontSize: 12.5, color: 'var(--muted)', marginTop: 2 }}>Tel: 071 385 6615 / 075 551 7736</div>
+                <div style={{ fontSize: 12.5, color: 'var(--muted)', marginTop: 2 }}>Haldummulla, Sri Lanka</div>
+              </div>
             </div>
             <div className="modal-actions">
               <button className="btn btn-secondary" onClick={() => window.print()}>Print</button>
