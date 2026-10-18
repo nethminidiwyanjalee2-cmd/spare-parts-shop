@@ -39,10 +39,9 @@ export default function LoginPage() {
     <div className="login-wrap">
       <div className="login-card">
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 22 }}>
-          <div className="brand-mark">SP</div>
+          <div className="brand-mark">GM</div>
           <div>
-            <div style={{ fontWeight: 700 }}>Spare Parts</div>
-            <div style={{ fontSize: 11, color: 'var(--muted)' }}>Shop Manager</div>
+            <div style={{ fontWeight: 700 }}>Gamage Motors</div>
           </div>
         </div>
         {(error || configError) && <div className="error-msg">{error || configError}</div>}
