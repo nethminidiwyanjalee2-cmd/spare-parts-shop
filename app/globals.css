@@ -600,3 +600,75 @@ a.nav-link { text-decoration: none; }
     display: none !important;
   }
 }
+/* The Log Out button was showing a larger font than the links */
+.sidebar button.nav-link { font-size: 14px; }
+
+/* ---------- Phone layout: slide-in menu ---------- */
+.mobile-topbar,
+.mobile-overlay,
+.sidebar-close-btn { display: none; }
+
+@media (max-width: 768px) {
+  .app-shell { flex-direction: column; }
+
+  /* Top bar with the menu button */
+  .mobile-topbar {
+    display: flex; align-items: center; gap: 12px;
+    position: sticky; top: 0; z-index: 40;
+    background: var(--steel); color: #fff; padding: 10px 14px;
+  }
+  .mobile-menu-btn {
+    width: 40px; height: 40px; padding: 0; font-size: 20px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(255, 255, 255, 0.1); color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px;
+  }
+  .mobile-topbar-title { font-weight: 700; font-size: 15px; }
+
+  /* Dark layer behind the open menu */
+  .mobile-overlay {
+    display: block; position: fixed; inset: 0; z-index: 90;
+    background: rgba(0, 0, 0, 0.45);
+    opacity: 0; pointer-events: none; transition: opacity 0.2s;
+  }
+  .mobile-overlay.show { opacity: 1; pointer-events: auto; }
+
+  /* The sidebar becomes a drawer that slides in from the left,
+     always showing full labels (the desktop collapse is ignored here) */
+  .sidebar,
+  .sidebar.collapsed {
+    position: fixed; top: 0; left: 0; bottom: 0; z-index: 100;
+    width: 260px; max-width: 82vw; padding: 20px 14px;
+    align-items: stretch; overflow-y: auto;
+    transform: translateX(-100%); visibility: hidden;
+    transition: transform 0.25s ease, visibility 0s linear 0.25s;
+  }
+  .sidebar.mobile-open {
+    transform: translateX(0); visibility: visible;
+    transition: transform 0.25s ease, visibility 0s;
+  }
+  .sidebar.collapsed .sidebar-header { flex-direction: row; justify-content: space-between; gap: 8px; }
+  .sidebar.collapsed .brand { padding: 0 4px; justify-content: flex-start; }
+  .sidebar.collapsed .brand-info { max-width: 130px; opacity: 1; pointer-events: auto; }
+  .sidebar.collapsed .nav-label { max-width: 140px; opacity: 1; pointer-events: auto; }
+  .sidebar.collapsed .nav-link,
+  .sidebar.collapsed button.nav-link { padding: 10px 12px; justify-content: flex-start; gap: 10px; }
+  .sidebar.collapsed .nav-link::after { display: none; }
+  .sidebar-toggle-btn { display: none; }
+  .sidebar-close-btn {
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    width: 32px; height: 32px; padding: 0; cursor: pointer; font-size: 15px;
+    background: rgba(255, 255, 255, 0.08); color: #c6cad3;
+    border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 6px;
+  }
+
+  /* Page content */
+  .main { padding: 16px 14px; max-width: 100%; min-width: 0; }
+  .billing-layout { grid-template-columns: 1fr; }
+  .grid-4 { gap: 10px; }
+  .stat-value { font-size: 19px; }
+  .search-box { max-width: 100%; width: 100%; }
+  .toolbar > * { max-width: 100%; }
+  .modal { padding: 18px; }
+  .toast { left: 14px; right: 14px; bottom: 16px; max-width: none; }
+}

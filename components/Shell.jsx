@@ -19,6 +19,7 @@ export default function Shell({ children }) {
   const router = useRouter();
   const online = useOnline();
   const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false); // phone menu (slide-in drawer)
 
   useEffect(() => {
     try {
@@ -52,7 +53,14 @@ export default function Shell({ children }) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
+  // Close the phone menu whenever you go to another page
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [path]);
+
   function toggleSidebar() {
+    // On a phone the sidebar is a drawer, so the collapse feature is not used
+    if (window.matchMedia('(max-width: 768px)').matches) return;
     setCollapsed((prev) => {
       const next = !prev;
       try {
@@ -69,7 +77,28 @@ export default function Shell({ children }) {
 
   return (
     <div className={`app-shell ${collapsed ? 'sidebar-is-collapsed' : ''}`}>
-      <aside className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
+      {/* Phone only: top bar with the menu button */}
+      <header className="mobile-topbar">
+        <button
+          type="button"
+          className="mobile-menu-btn"
+          onClick={() => setMobileOpen(true)}
+          aria-label="Open menu"
+          aria-expanded={mobileOpen}
+        >
+          &#9776;
+        </button>
+        <div className="mobile-topbar-title">Gamage Motors</div>
+      </header>
+
+      {/* Phone only: dark layer behind the open menu, tap to close */}
+      <div
+        className={`mobile-overlay ${mobileOpen ? 'show' : ''}`}
+        onClick={() => setMobileOpen(false)}
+        aria-hidden="true"
+      />
+
+      <aside className={`sidebar ${collapsed ? 'collapsed' : ''} ${mobileOpen ? 'mobile-open' : ''}`}>
         <div className="sidebar-header">
           <div
             className="brand"
@@ -102,6 +131,7 @@ export default function Shell({ children }) {
             </div>
           </div>
 
+          {/* Desktop: collapse / expand */}
           <button
             type="button"
             className="sidebar-toggle-btn"
@@ -126,6 +156,16 @@ export default function Shell({ children }) {
                 <polyline points="15 18 9 12 15 6" />
               )}
             </svg>
+          </button>
+
+          {/* Phone: close the menu */}
+          <button
+            type="button"
+            className="sidebar-close-btn"
+            onClick={() => setMobileOpen(false)}
+            aria-label="Close menu"
+          >
+            &#10005;
           </button>
         </div>
 
