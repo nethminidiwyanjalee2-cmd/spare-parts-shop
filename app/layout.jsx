@@ -4,8 +4,8 @@ import { ToastProvider } from '@/lib/ui';
 import RegisterSW from '@/components/RegisterSW';
 
 export const metadata = {
-  title: 'Spare Parts Shop Manager',
-  description: 'Inventory, billing and reports for a vehicle spare parts shop',
+  title: 'Gamage Motors',
+  description: 'Gamage Motors Application',
   manifest: '/manifest.json',
 };
 export const viewport = { themeColor: '#2e3440' };
