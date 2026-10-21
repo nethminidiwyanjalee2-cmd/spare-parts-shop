@@ -102,7 +102,7 @@ export default function BillingPage() {
             <div style={{ maxHeight: 260, overflowY: 'auto', border: '1px solid var(--line)', borderRadius: 8, marginTop: -6, marginBottom: 14 }}>
               {matches.map((m) => (
                 <div key={m.id} style={{ padding: '10px 12px', cursor: 'pointer', borderBottom: '1px solid var(--line)' }}
-                     onMouseDown={(e) => { e.preventDefault(); addToCart(m); }}>
+                  onMouseDown={(e) => { e.preventDefault(); addToCart(m); }}>
                   <strong>{m.name}</strong>{' '}
                   <span style={{ color: 'var(--muted)', fontSize: 12 }}>({m.barcode}) · Stock: {m.stockQty} · {money(m.price)}</span>
                 </div>
@@ -122,7 +122,7 @@ export default function BillingPage() {
                 <span>{c.quantity}</span>
                 <button onClick={() => changeQty(c.categoryId, 1)}>+</button>
                 <button onClick={() => setCart(cart.filter((x) => x.categoryId !== c.categoryId))}
-                        style={{ marginLeft: 8, color: '#c0392b', borderColor: '#f0c9c1' }}>✕</button>
+                  style={{ marginLeft: 8, color: '#c0392b', borderColor: '#f0c9c1' }}>✕</button>
               </div>
             </div>
           ))}
@@ -143,7 +143,7 @@ export default function BillingPage() {
           <div className="total-row"><span>Discount</span><span>{money(disc)}</span></div>
           <div className="total-row grand"><span>Total</span><span>{money(total)}</span></div>
           <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: 10 }}
-                  onClick={checkout} disabled={busy}>
+            onClick={checkout} disabled={busy}>
             {busy ? 'Saving…' : 'Complete Sale'}
           </button>
         </div>
@@ -152,24 +152,24 @@ export default function BillingPage() {
       <Modal open={!!receipt} width={380}>
         {receipt && (
           <>
-            <h2 className="no-print">Sale Completed ✓</h2>
-            
+            {/* <h2 className="no-print">Sale Completed ✓</h2> */}
+
             {/* Thermal Print Area */}
             <div className="print-area thermal-slip">
-              <img
-                src="/logo.jpeg"
+              { <img
+                src="/logo2.jpg"
                 alt="Shop Logo"
                 style={{
                   display: 'block',
                   margin: '0 auto 6px',
-                  maxHeight: 60,
-                  maxWidth: '70%',
+                  maxHeight: 130,
+                  maxWidth: '120%',
                   objectFit: 'contain',
                 }}
                 onError={(e) => {
                   e.currentTarget.style.display = 'none';
                 }}
-              />
+              /> }
               <div style={{ borderTop: '1px dashed #000', margin: '6px 0' }} />
 
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px' }}>
@@ -225,7 +225,7 @@ export default function BillingPage() {
 
               <div style={{ borderTop: '1px dashed #000', marginTop: '8px', paddingTop: '6px', textAlign: 'center' }}>
                 <div style={{ fontWeight: 'bold', fontSize: '11px' }}>Thank you for choosing us!</div>
-                <div style={{ fontSize: '10px', marginTop: '2px' }}>Tel: 075 092 8684 / 076 551 </div>
+                <div style={{ fontSize: '10px', marginTop: '2px' }}>Tel: 075 092 8684 / 076 909 4427 </div>
                 <div style={{ fontSize: '10px' }}>Haldummulla, Sri Lanka</div>
               </div>
             </div>
