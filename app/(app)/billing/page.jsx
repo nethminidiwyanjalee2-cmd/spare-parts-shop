@@ -156,7 +156,7 @@ export default function BillingPage() {
 
             {/* Thermal Print Area */}
             <div className="print-area thermal-slip">
-              { <img
+              {<img
                 src="/logo2.jpg"
                 alt="Shop Logo"
                 style={{
@@ -169,7 +169,7 @@ export default function BillingPage() {
                 onError={(e) => {
                   e.currentTarget.style.display = 'none';
                 }}
-              /> }
+              />}
               <div style={{ borderTop: '1px dashed #000', margin: '6px 0' }} />
 
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px' }}>
@@ -225,7 +225,7 @@ export default function BillingPage() {
 
               <div style={{ borderTop: '1px dashed #000', marginTop: '8px', paddingTop: '6px', textAlign: 'center' }}>
                 <div style={{ fontWeight: 'bold', fontSize: '11px' }}>Thank you for choosing us!</div>
-                <div style={{ fontSize: '10px', marginTop: '2px' }}>Tel: 075 092 8684 / 076 909 4427 </div>
+                <div style={{ fontSize: '10px', marginTop: '2px' }}>Tel: 075 092 8684 / 076 909 4427 / 071 385 6615</div>
                 <div style={{ fontSize: '10px' }}>Haldummulla, Sri Lanka</div>
               </div>
             </div>
