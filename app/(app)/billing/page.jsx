@@ -152,63 +152,131 @@ export default function BillingPage() {
       <Modal open={!!receipt} width={380}>
         {receipt && (
           <>
-            <h2>Sale Completed ✓</h2>
-            <div className="print-area" style={{ fontSize: 13.5 }}>
+            <h2 className="no-print">Sale Completed ✓</h2>
+            
+            {/* Thermal Print Area */}
+            <div className="print-area thermal-slip">
               <img
                 src="/logo.jpeg"
                 alt="Shop Logo"
                 style={{
                   display: 'block',
-                  margin: '0 auto 10px',
-                  maxHeight: 80,
-                  maxWidth: '60%',
+                  margin: '0 auto 6px',
+                  maxHeight: 60,
+                  maxWidth: '70%',
                   objectFit: 'contain',
-                  filter: 'invert(1)',
                 }}
                 onError={(e) => {
                   e.currentTarget.style.display = 'none';
                 }}
               />
-              <p><strong>Invoice:</strong> {receipt.invoiceNo}</p>
-              <p><strong>Date:</strong> {fmtDateTime(receipt.createdAt)}</p>
-              {receipt.customerName && <p><strong>Customer:</strong> {receipt.customerName}</p>}
-              <p><strong>Payment:</strong> {receipt.paymentMethod}</p>
-              <table style={{ margin: '10px 0' }}>
+              <div style={{ borderTop: '1px dashed #000', margin: '6px 0' }} />
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px' }}>
+                <span><strong>INV:</strong> #{receipt.invoiceNo}</span>
+                <span>{fmtDateTime(receipt.createdAt)}</span>
+              </div>
+              {receipt.customerName && (
+                <div style={{ fontSize: '11px', marginTop: '2px' }}>
+                  <strong>CUST:</strong> {receipt.customerName}
+                </div>
+              )}
+              <div style={{ fontSize: '11px', marginTop: '2px' }}>
+                <strong>PAYMENT:</strong> {receipt.paymentMethod}
+              </div>
+
+              <div style={{ borderTop: '1px dashed #000', margin: '6px 0' }} />
+
+              <table style={{ width: '100%', fontSize: '11px', borderCollapse: 'collapse' }}>
                 <thead>
-                  <tr>
-                    <th>Item</th>
-                    <th style={{ textAlign: 'right' }}>Qty</th>
-                    <th style={{ textAlign: 'right' }}>Price</th>
-                    <th style={{ textAlign: 'right' }}>Amount</th>
+                  <tr style={{ borderBottom: '1px solid #000' }}>
+                    <th style={{ textAlign: 'left', paddingBottom: '3px' }}>Item</th>
+                    <th style={{ textAlign: 'right', paddingBottom: '3px' }}>Qty</th>
+                    <th style={{ textAlign: 'right', paddingBottom: '3px' }}>Price</th>
+                    <th style={{ textAlign: 'right', paddingBottom: '3px' }}>Amt</th>
                   </tr>
                 </thead>
                 <tbody>
                   {receipt.items.map((i) => (
                     <tr key={i.categoryId}>
-                      <td>{i.name}</td>
-                      <td style={{ textAlign: 'right' }}>{i.quantity}</td>
-                      <td style={{ textAlign: 'right' }}>{money(i.unitPrice)}</td>
-                      <td style={{ textAlign: 'right' }}>{money(i.lineTotal)}</td>
+                      <td style={{ paddingTop: '3px', paddingBottom: '3px' }}>{i.name}</td>
+                      <td style={{ textAlign: 'right', verticalAlign: 'top' }}>{i.quantity}</td>
+                      <td style={{ textAlign: 'right', verticalAlign: 'top' }}>{money(i.unitPrice)}</td>
+                      <td style={{ textAlign: 'right', verticalAlign: 'top' }}>{money(i.lineTotal)}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
-              <div className="total-row"><span>Subtotal</span><span>{money(receipt.subtotal)}</span></div>
-              <div className="total-row"><span>Discount</span><span>{money(receipt.discount)}</span></div>
-              <div className="total-row grand"><span>Total</span><span>{money(receipt.totalAmount)}</span></div>
-              <div style={{ borderTop: '1px dashed var(--line)', marginTop: 14, paddingTop: 10, textAlign: 'center' }}>
-                <div style={{ fontWeight: 'bold' }}>Thank you for choosing us. Have a great day!</div>
-                <div style={{ fontSize: 12.5, color: 'var(--muted)', marginTop: 2 }}>Tel: 071 385 6615 / 075 551 7736</div>
-                <div style={{ fontSize: 12.5, color: 'var(--muted)', marginTop: 2 }}>Haldummulla, Sri Lanka</div>
+
+              <div style={{ borderTop: '1px dashed #000', margin: '6px 0' }} />
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px' }}>
+                <span>Subtotal</span>
+                <span>{money(receipt.subtotal)}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px' }}>
+                <span>Discount</span>
+                <span>{money(receipt.discount)}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', fontWeight: 'bold', marginTop: '3px' }}>
+                <span>TOTAL</span>
+                <span>{money(receipt.totalAmount)}</span>
+              </div>
+
+              <div style={{ borderTop: '1px dashed #000', marginTop: '8px', paddingTop: '6px', textAlign: 'center' }}>
+                <div style={{ fontWeight: 'bold', fontSize: '11px' }}>Thank you for choosing us!</div>
+                <div style={{ fontSize: '10px', marginTop: '2px' }}>Tel: 075 092 8684 / 076 551 </div>
+                <div style={{ fontSize: '10px' }}>Haldummulla, Sri Lanka</div>
               </div>
             </div>
-            <div className="modal-actions">
+
+            <div className="modal-actions no-print" style={{ marginTop: 16 }}>
               <button className="btn btn-secondary" onClick={() => window.print()}>Print</button>
               <button className="btn btn-primary" onClick={newBill}>New Bill</button>
             </div>
           </>
         )}
       </Modal>
+
+      {/* Global CSS Force for 80mm Thermal Printer */}
+      <style jsx global>{`
+        @media print {
+          /* Receipt එක හැර අන් සියල්ල Hide කිරීම */
+          body * {
+            visibility: hidden !important;
+          }
+          
+          /* Thermal Slip එක විතරක් Visible කිරීම */
+          .thermal-slip, .thermal-slip * {
+            visibility: visible !important;
+          }
+
+          /* Thermal Slip Layout Force කිරීම */
+          .thermal-slip {
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 78mm !important;
+            max-width: 78mm !important;
+            padding: 2mm !important;
+            margin: 0 !important;
+            font-family: 'Courier New', Courier, monospace !important;
+            color: #000 !important;
+            background: #fff !important;
+          }
+
+          /* Buttons, Headings Hide කිරීම */
+          .no-print {
+            display: none !important;
+          }
+
+          /* Page Size එක Code එකෙන්ම 80mm වලට Force කිරීම */
+          @page {
+            size: 80mm auto !important;
+            margin: 0mm !important;
+          }
+        }
+      `}</style>
     </>
   );
 }
