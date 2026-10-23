@@ -463,7 +463,6 @@ tr:hover td { background: #fafaf8; }
   border-radius: 4px 4px 0 0;
 }
 
-/* ---------- Added for the Next.js version ---------- */
 .offline-banner {
   background: #fbf1e0; color: var(--amber); border: 1px solid #f0dcb4;
   padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 18px;
@@ -549,58 +548,6 @@ a.nav-link { text-decoration: none; }
   cursor: not-allowed;
 }
 
-@page {
-  size: A5 portrait;
-  margin: 0;
-}
-
-@media print {
-  /* ── 1. Hide everything on the page ── */
-  body * {
-    visibility: hidden !important;
-  }
-
-  /* ── 2. The modal overlay/container create a new stacking context
-     (position:fixed + overflow:auto) that traps position:fixed children.
-     Reset them at print time so .print-area can escape to the page. ── */
-  .modal-overlay,
-  .modal {
-    position: static !important;
-    overflow: visible !important;
-    background: transparent !important;
-    inset: auto !important;
-    display: block !important;
-    width: auto !important;
-    max-width: none !important;
-    max-height: none !important;
-    padding: 0 !important;
-    border-radius: 0 !important;
-    box-shadow: none !important;
-  }
-
-  /* ── 3. Stamp the receipt at the top-left of the A5 sheet ── */
-  .print-area,
-  .print-area * {
-    visibility: visible !important;
-  }
-
-  .print-area {
-    position: fixed !important;
-    inset: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
-    padding: 10mm !important;
-    box-sizing: border-box !important;
-    background: #fff !important;
-    color: #000 !important;
-  }
-
-  /* ── 4. Make sure modal-actions (Print / New Bill buttons) don't print ── */
-  .modal-actions {
-    display: none !important;
-  }
-}
-/* The Log Out button was showing a larger font than the links */
 .sidebar button.nav-link { font-size: 14px; }
 
 /* ---------- Phone layout: slide-in menu ---------- */
@@ -611,7 +558,6 @@ a.nav-link { text-decoration: none; }
 @media (max-width: 768px) {
   .app-shell { flex-direction: column; }
 
-  /* Top bar with the menu button */
   .mobile-topbar {
     display: flex; align-items: center; gap: 12px;
     position: sticky; top: 0; z-index: 40;
@@ -625,7 +571,6 @@ a.nav-link { text-decoration: none; }
   }
   .mobile-topbar-title { font-weight: 700; font-size: 15px; }
 
-  /* Dark layer behind the open menu */
   .mobile-overlay {
     display: block; position: fixed; inset: 0; z-index: 90;
     background: rgba(0, 0, 0, 0.45);
@@ -633,8 +578,6 @@ a.nav-link { text-decoration: none; }
   }
   .mobile-overlay.show { opacity: 1; pointer-events: auto; }
 
-  /* The sidebar becomes a drawer that slides in from the left,
-     always showing full labels (the desktop collapse is ignored here) */
   .sidebar,
   .sidebar.collapsed {
     position: fixed; top: 0; left: 0; bottom: 0; z-index: 100;
@@ -662,7 +605,6 @@ a.nav-link { text-decoration: none; }
     border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 6px;
   }
 
-  /* Page content */
   .main { padding: 16px 14px; max-width: 100%; min-width: 0; }
   .billing-layout { grid-template-columns: 1fr; }
   .grid-4 { gap: 10px; }
@@ -671,4 +613,102 @@ a.nav-link { text-decoration: none; }
   .toolbar > * { max-width: 100%; }
   .modal { padding: 18px; }
   .toast { left: 14px; right: 14px; bottom: 16px; max-width: none; }
+}
+
+/* ==========================================================
+   38mm x 25mm Label & Multi-up Print Settings
+   ========================================================== */
+
+@page {
+  size: auto; /* Page Height එක automatic පරිමාණය කිරීමට */
+  margin: 0;
+}
+
+@media print {
+  /* Hide unnecessary layout components */
+  body * {
+    visibility: hidden !important;
+  }
+
+  html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  /* Make print area visible */
+  .print-area,
+  .print-area * {
+    visibility: visible !important;
+  }
+
+  /* Label Print Container */
+  .print-area {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: #fff !important;
+    color: #000 !important;
+  }
+
+  /* Multi-up Labels Grid View Setup */
+  .label-grid {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    justify-content: flex-start !important;
+    align-items: flex-start !important;
+    gap: 2mm !important; /* Multi-up labels අතර පරතරය */
+    width: 100% !important;
+  }
+
+  /* Single Label Dimensions (38mm x 25mm) */
+  .label-item {
+    width: 38mm !important;
+    height: 25mm !important;
+    box-sizing: border-box !important;
+    padding: 1.5mm !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    overflow: hidden !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  /* Barcode SVG Resizing */
+  .label-item svg {
+    width: 100% !important;
+    height: auto !important;
+    max-height: 15mm !important;
+  }
+
+  .label-item .item-title {
+    font-size: 8px !important;
+    font-weight: bold !important;
+    line-height: 1 !important;
+    margin-bottom: 1px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: 100% !important;
+  }
+
+  .label-item .item-price {
+    font-size: 8px !important;
+    font-weight: bold !important;
+    margin-top: 1px !important;
+  }
+
+  /* Hide modal buttons in print mode */
+  .modal-actions {
+    display: none !important;
+  }
 }

@@ -52,12 +52,48 @@ export default function InventoryPage() {
 
   async function save() {
     if (!isManager) return;
-    if (!form.name.trim()) return toast('Please enter an item name', 'error');
+
+    const name = form.name?.trim();
+    const price = parseFloat(form.price);
+    const stockQty = form.id ? null : parseInt(form.stockQty, 10);
+    const reorderLevel = form.reorderLevel !== '' && form.reorderLevel !== null && form.reorderLevel !== undefined 
+      ? parseInt(form.reorderLevel, 10) 
+      : null;
+
+    // 1. Mandatory Field Checks
+    if (!name) {
+      return toast('Item name is required', 'error');
+    }
+    if (form.price === '' || isNaN(price)) {
+      return toast('Selling price is required', 'error');
+    }
+    if (!form.id && (form.stockQty === '' || isNaN(stockQty))) {
+      return toast('Opening stock quantity is required', 'error');
+    }
+
+    // 2. Positive / Non-Negative Number Validations
+    if (price <= 0) {
+      return toast('Selling price must be greater than 0', 'error');
+    }
+    if (!form.id && stockQty < 0) {
+      return toast('Opening stock quantity cannot be negative', 'error');
+    }
+    if (reorderLevel !== null && (isNaN(reorderLevel) || reorderLevel < 0)) {
+      return toast('Reorder level cannot be negative', 'error');
+    }
+
     try {
-      if (form.id) { await updateItem(form.id, form); toast('Item updated', 'success'); }
-      else { await createItem(allItems, form); toast('Item added', 'success'); }
+      if (form.id) { 
+        await updateItem(form.id, form); 
+        toast('Item updated', 'success'); 
+      } else { 
+        await createItem(allItems, form); 
+        toast('Item added', 'success'); 
+      }
       setForm(null);
-    } catch (e) { toast(e.message, 'error'); }
+    } catch (e) { 
+      toast(e.message, 'error'); 
+    }
   }
 
   async function remove(item) {
@@ -78,13 +114,98 @@ export default function InventoryPage() {
   }
 
   function printBarcode() {
+    if (!svgRef.current) return;
+    
     const svg = svgRef.current.outerHTML;
+    const itemName = barcodeFor?.name || '';
+    const itemPrice = barcodeFor?.price ? `Rs. ${barcodeFor.price}` : '';
+
     const w = window.open('', '_blank');
-    w.document.write(`<html><head><style>
-      @page { margin: 0; } *{margin:0;padding:0;box-sizing:border-box}
-      body{display:flex;align-items:center;justify-content:center;height:100vh}
-      svg{width:100%;height:auto}
-    </style></head><body>${svg}<script>window.onload=()=>{window.print();window.onafterprint=()=>window.close();}<\/script></body></html>`);
+    w.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Print Label</title>
+          <style>
+            /* 1. Page Size set to 38mm x 25mm */
+            @page {
+              size: 38mm 25mm;
+              margin: 0;
+            }
+            
+            * {
+              margin: 0;
+              padding: 0;
+              box-sizing: border-box;
+            }
+
+            html, body {
+              width: 38mm;
+              height: 25mm;
+              overflow: hidden;
+              background: #fff;
+              font-family: Arial, sans-serif;
+            }
+
+            /* 2. Center the content inside the sticker */
+            .label-card {
+              width: 38mm;
+              height: 25mm;
+              padding: 1.5mm 2mm;
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              justify-content: center;
+              text-align: center;
+            }
+
+            .item-name {
+              font-size: 8px;
+              font-weight: bold;
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              max-width: 34mm;
+              line-height: 1;
+              margin-bottom: 1px;
+            }
+
+            .barcode-container {
+              width: 100%;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+            }
+
+            svg {
+              width: 100% !important;
+              height: auto !important;
+              max-height: 14mm !important;
+            }
+
+            .item-price {
+              font-size: 8px;
+              font-weight: bold;
+              margin-top: 1px;
+              line-height: 1;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="label-card">
+            ${itemName ? `<div class="item-name">${itemName}</div>` : ''}
+            <div class="barcode-container">${svg}</div>
+            ${itemPrice ? `<div class="item-price">${itemPrice}</div>` : ''}
+          </div>
+          <script>
+            window.onload = () => {
+              window.print();
+              window.onafterprint = () => window.close();
+            };
+          <\/script>
+        </body>
+      </html>
+    `);
     w.document.close();
   }
 
@@ -164,28 +285,52 @@ export default function InventoryPage() {
         {form && (
           <>
             <h2>{form.id ? 'Edit Item' : 'Add New Item'}</h2>
-            <div className="field"><label>Item / Category Name</label>
-              <input type="text" placeholder="e.g. Signal Light - Tuk Tuk" value={form.name} onChange={setF('name')} /></div>
-            <div className="grid-2">
-              <div className="field"><label>Vehicle Type</label>
-                <input type="text" placeholder="e.g. Tuk Tuk, Bike, Bus" value={form.vehicleType} onChange={setF('vehicleType')} /></div>
-              <div className="field"><label>Barcode {!form.id && <span style={{ fontWeight: 400 }}>(blank = auto)</span>}</label>
-                <input type="text" placeholder="Auto" value={form.barcode} onChange={setF('barcode')} disabled={!!form.id} /></div>
+            
+            <div className="field">
+              <label>Item / Category Name <span style={{ color: 'red' }}>*</span></label>
+              <input type="text" placeholder="e.g. Signal Light - Tuk Tuk" value={form.name} onChange={setF('name')} required />
             </div>
+
             <div className="grid-2">
-              <div className="field"><label>Selling Price (Rs.)</label>
-                <input type="number" step="0.01" placeholder="0.00" value={form.price} onChange={setF('price')} /></div>
-              <div className="field"><label>Cost Price (Rs.)</label>
-                <input type="number" step="0.01" placeholder="0.00" value={form.costPrice} onChange={setF('costPrice')} /></div>
+              <div className="field">
+                <label>Vehicle Type</label>
+                <input type="text" placeholder="e.g. Tuk Tuk, Bike, Bus" value={form.vehicleType} onChange={setF('vehicleType')} />
+              </div>
+              <div className="field">
+                <label>Barcode {!form.id && <span style={{ fontWeight: 400 }}>(blank = auto)</span>}</label>
+                <input type="text" placeholder="Auto" value={form.barcode} onChange={setF('barcode')} disabled={!!form.id} />
+              </div>
             </div>
+
             <div className="grid-2">
-              <div className="field"><label>{form.id ? 'Current Stock (use “Stock” to change)' : 'Opening Stock Qty'}</label>
-                <input type="number" placeholder="0" value={form.stockQty} onChange={setF('stockQty')} disabled={!!form.id} /></div>
-              <div className="field"><label>Reorder Level</label>
-                <input type="number" placeholder="5" value={form.reorderLevel} onChange={setF('reorderLevel')} /></div>
+              <div className="field">
+                <label>Selling Price (Rs.) <span style={{ color: 'red' }}>*</span></label>
+                <input type="number" step="1" min="0" placeholder="0.00" value={form.price} onChange={setF('price')} required />
+              </div>
+              <div className="field">
+                <label>Cost Price (Rs.)</label>
+                <input type="number" step="1" min="0" placeholder="0.00" value={form.costPrice} onChange={setF('costPrice')} />
+              </div>
             </div>
-            <div className="field"><label>Notes (optional)</label>
-              <input type="text" placeholder="e.g. supplier, part number" value={form.notes} onChange={setF('notes')} /></div>
+
+            <div className="grid-2">
+              <div className="field">
+                <label>
+                  {form.id ? 'Current Stock (use “Stock” to change)' : 'Opening Stock Qty'} {!form.id && <span style={{ color: 'red' }}>*</span>}
+                </label>
+                <input type="number" min="0" placeholder="0" value={form.stockQty} onChange={setF('stockQty')} disabled={!!form.id} required={!form.id} />
+              </div>
+              <div className="field">
+                <label>Reorder Level</label>
+                <input type="number" min="0" placeholder="5" value={form.reorderLevel} onChange={setF('reorderLevel')} />
+              </div>
+            </div>
+
+            <div className="field">
+              <label>Notes (optional)</label>
+              <input type="text" placeholder="e.g. supplier, part number" value={form.notes} onChange={setF('notes')} />
+            </div>
+
             <div className="modal-actions">
               <button className="btn btn-secondary" onClick={() => setForm(null)}>Cancel</button>
               <button className="btn btn-primary" onClick={save}>Save Item</button>
