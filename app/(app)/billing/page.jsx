@@ -265,6 +265,13 @@ export default function BillingPage() {
             background: #fff !important;
           }
 
+          /* Force all text inside the receipt to be full black */
+          .thermal-slip *, .thermal-slip *::before, .thermal-slip *::after {
+            color: #000 !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+
           /* Buttons, Headings Hide කිරීම */
           .no-print {
             display: none !important;
