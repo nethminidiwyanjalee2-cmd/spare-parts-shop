@@ -132,11 +132,11 @@ export default function InventoryPage() {
     const itemCode  = barcodeFor?.barcode || '';
     const itemPrice = barcodeFor?.price   ? `Rs. ${barcodeFor.price}` : '';
 
-    // ── One .label-sticker div = one physical 80mm × 50mm sticker ──
+    // ── One .label-container div = one physical 80mm × 50mm sticker ──
     // page-break-after: always pushes the next copy onto the next label.
     // :last-child resets it so no blank sticker is wasted at the end.
     const labelHTML = `
-      <div class="label-sticker">
+      <div class="label-container">
         ${itemName  ? `<div class="lbl-name">${itemName}</div>`   : ''}
         <div class="barcode-wrap">${svg}</div>
         ${itemCode  ? `<div class="lbl-code">${itemCode}</div>`   : ''}
@@ -152,10 +152,10 @@ export default function InventoryPage() {
         <head>
           <title>Label – ${itemName}</title>
           <style>
-            /* ── Page = exactly one 80 × 50 mm sticker ── */
+            /* ── Page = exactly one 80 × 50 mm sticker in landscape ── */
             @page {
-              size: 80mm 50mm;
-              margin: 0mm;
+              size: 80mm 50mm landscape;
+              margin: 0;
             }
 
             *, *::before, *::after {
@@ -166,6 +166,7 @@ export default function InventoryPage() {
 
             html, body {
               width: 80mm;
+              height: 50mm;
               background: #fff;
               font-family: Arial, Helvetica, sans-serif;
               color: #000;
@@ -173,10 +174,11 @@ export default function InventoryPage() {
               print-color-adjust: exact;
             }
 
-            /* ── Sticker wrapper: locked to 80 × 50 mm ── */
-            .label-sticker {
+            /* ── Sticker container: locked to 80 × 50 mm in landscape ── */
+            .label-container {
               width: 80mm;
               height: 50mm;
+              box-sizing: border-box;
               padding: 3mm 4mm;      /* inner breathing room – won't clip edges */
               display: flex;
               flex-direction: column;
@@ -193,7 +195,7 @@ export default function InventoryPage() {
             }
 
             /* No blank trailing sticker after the last copy */
-            .label-sticker:last-child {
+            .label-container:last-child {
               page-break-after: auto;
               break-after: auto;
             }
