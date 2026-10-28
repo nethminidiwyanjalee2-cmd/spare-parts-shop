@@ -155,7 +155,7 @@ export default function BillingPage() {
             {/* <h2 className="no-print">Sale Completed ✓</h2> */}
 
             {/* Thermal Print Area */}
-            <div className="print-area thermal-slip">
+            <div className="print-area thermal-slip receipt-container">
               {<img
                 src="/logo2.jpg"
                 alt="Shop Logo"
@@ -247,12 +247,14 @@ export default function BillingPage() {
           }
           
           /* Thermal Slip එක විතරක් Visible කිරීම */
-          .thermal-slip, .thermal-slip * {
+          .thermal-slip, .thermal-slip *,
+          .receipt-container, .receipt-container * {
             visibility: visible !important;
           }
 
           /* Thermal Slip Layout Force කිරීම */
-          .thermal-slip {
+          .thermal-slip,
+          .receipt-container {
             position: absolute !important;
             left: 0 !important;
             top: 0 !important;
@@ -261,15 +263,54 @@ export default function BillingPage() {
             padding: 2mm !important;
             margin: 0 !important;
             font-family: 'Courier New', Courier, monospace !important;
-            color: #000 !important;
+            color: #000000 !important;
+            font-weight: 700 !important;
             background: #fff !important;
+            -webkit-print-color-adjust: exact !important;
+            color-adjust: exact !important;
+            print-color-adjust: exact !important;
           }
 
-          /* Force all text inside the receipt to be full black */
-          .thermal-slip *, .thermal-slip *::before, .thermal-slip *::after {
-            color: #000 !important;
+          /* Force all text inside the receipt container to be full black and bold */
+          .thermal-slip,
+          .thermal-slip *,
+          .thermal-slip p,
+          .thermal-slip span,
+          .thermal-slip td,
+          .thermal-slip th,
+          .thermal-slip div,
+          .receipt-container,
+          .receipt-container *,
+          .receipt-container p,
+          .receipt-container span,
+          .receipt-container td,
+          .receipt-container th,
+          .receipt-container div {
+            color: #000000 !important;
+            font-weight: 700 !important;
             -webkit-print-color-adjust: exact !important;
+            color-adjust: exact !important;
             print-color-adjust: exact !important;
+          }
+
+          /* Table headers & cells styling */
+          .thermal-slip table,
+          .receipt-container table {
+            width: 100% !important;
+            color: #000000 !important;
+          }
+
+          .thermal-slip th,
+          .receipt-container th {
+            font-weight: 900 !important;
+            color: #000000 !important;
+            border-bottom: 1.5px solid #000000 !important;
+          }
+
+          .thermal-slip td,
+          .receipt-container td {
+            font-weight: 700 !important;
+            color: #000000 !important;
           }
 
           /* Buttons, Headings Hide කිරීම */

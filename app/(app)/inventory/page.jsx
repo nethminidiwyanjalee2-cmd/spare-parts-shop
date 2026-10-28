@@ -146,6 +146,10 @@ export default function InventoryPage() {
     const allLabels = Array.from({ length: qty }, () => labelHTML).join('\n');
 
     const w = window.open('', '_blank');
+    if (!w) {
+      alert('Pop-up was blocked by your browser. Please allow pop-ups for this site to print labels.');
+      return;
+    }
     w.document.write(`
       <!DOCTYPE html>
       <html>
