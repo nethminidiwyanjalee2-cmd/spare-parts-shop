@@ -115,25 +115,41 @@ export default function InventoryPage() {
 
   function printBarcode() {
     if (!svgRef.current) return;
-    
+
+    const rawQty = prompt('How many labels do you want to print?', '1');
+    if (rawQty === null) return; // cancelled
+    const qty = Math.max(1, Math.min(100, parseInt(rawQty, 10) || 1));
+
     const svg = svgRef.current.outerHTML;
     const itemName = barcodeFor?.name || '';
     const itemPrice = barcodeFor?.price ? `Rs. ${barcodeFor.price}` : '';
+
+    // Build N label pages — one per physical sticker — separated by page-break-after.
+    // Each .label-page is exactly 38mm × 25mm so the printer never splits a barcode
+    // across two stickers regardless of how many copies are requested.
+    const labelPage = `
+      <div class="label-page">
+        ${itemName ? `<div class="item-name">${itemName}</div>` : ''}
+        <div class="barcode-wrap">${svg}</div>
+        ${itemPrice ? `<div class="item-price">${itemPrice}</div>` : ''}
+      </div>`;
+
+    const allLabels = Array.from({ length: qty }, () => labelPage).join('\n');
 
     const w = window.open('', '_blank');
     w.document.write(`
       <!DOCTYPE html>
       <html>
         <head>
-          <title>Print Label</title>
+          <title>Print Label – ${itemName}</title>
           <style>
-            /* 1. Page Size set to 38mm x 25mm */
+            /* ─── Thermal sticker page: exactly one label per page ─── */
             @page {
               size: 38mm 25mm;
-              margin: 0;
+              margin: 0mm;
             }
-            
-            * {
+
+            *, *::before, *::after {
               margin: 0;
               padding: 0;
               box-sizing: border-box;
@@ -141,14 +157,13 @@ export default function InventoryPage() {
 
             html, body {
               width: 38mm;
-              height: 25mm;
-              overflow: hidden;
               background: #fff;
-              font-family: Arial, sans-serif;
+              font-family: Arial, Helvetica, sans-serif;
+              color: #000;
             }
 
-            /* 2. Center the content inside the sticker */
-            .label-card {
+            /* Each label is locked to exactly one physical sticker */
+            .label-page {
               width: 38mm;
               height: 25mm;
               padding: 1.5mm 2mm;
@@ -157,50 +172,63 @@ export default function InventoryPage() {
               align-items: center;
               justify-content: center;
               text-align: center;
+              overflow: hidden;
+
+              /* Critical: never let a label bleed onto the next sticker */
+              page-break-after: always;
+              break-after: page;
+              page-break-inside: avoid;
+              break-inside: avoid;
+            }
+
+            /* Last label must NOT add a blank trailing page */
+            .label-page:last-child {
+              page-break-after: auto;
+              break-after: auto;
             }
 
             .item-name {
-              font-size: 8px;
+              font-size: 7.5px;
               font-weight: bold;
               white-space: nowrap;
               overflow: hidden;
               text-overflow: ellipsis;
               max-width: 34mm;
               line-height: 1;
-              margin-bottom: 1px;
+              margin-bottom: 0.5mm;
+              color: #000;
             }
 
-            .barcode-container {
-              width: 100%;
+            .barcode-wrap {
+              width: 34mm;
               display: flex;
               justify-content: center;
               align-items: center;
             }
 
-            svg {
-              width: 100% !important;
+            /* Force the JsBarcode SVG to fit exactly inside the sticker */
+            .barcode-wrap svg {
+              display: block !important;
+              width: 34mm !important;
               height: auto !important;
               max-height: 14mm !important;
             }
 
             .item-price {
-              font-size: 8px;
+              font-size: 7.5px;
               font-weight: bold;
-              margin-top: 1px;
+              margin-top: 0.5mm;
               line-height: 1;
+              color: #000;
             }
           </style>
         </head>
         <body>
-          <div class="label-card">
-            ${itemName ? `<div class="item-name">${itemName}</div>` : ''}
-            <div class="barcode-container">${svg}</div>
-            ${itemPrice ? `<div class="item-price">${itemPrice}</div>` : ''}
-          </div>
+          ${allLabels}
           <script>
-            window.onload = () => {
+            window.onload = function () {
               window.print();
-              window.onafterprint = () => window.close();
+              window.onafterprint = function () { window.close(); };
             };
           <\/script>
         </body>
