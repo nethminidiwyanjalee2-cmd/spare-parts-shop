@@ -40,10 +40,17 @@ export default function InventoryPage() {
   }, [filtered, safeCurrentPage]);
 
   // Draw the barcode whenever the barcode modal opens
+  // Height/width tuned for 80mm × 50mm sticker
   useEffect(() => {
     if (barcodeFor && svgRef.current) {
       JsBarcode(svgRef.current, barcodeFor.barcode, {
-        format: 'CODE128', displayValue: true, height: 70, fontSize: 16, margin: 10, width: 2,
+        format: 'CODE128',
+        displayValue: true,
+        height: 100,       // taller bars to fill 80×50mm sticker
+        fontSize: 18,
+        margin: 12,        // quiet-zone margin for scanner readability
+        width: 2.5,        // bar width – scales well at 80mm
+        textMargin: 4,
       });
     }
   }, [barcodeFor]);
@@ -121,31 +128,33 @@ export default function InventoryPage() {
     const qty = Math.max(1, Math.min(100, parseInt(rawQty, 10) || 1));
 
     const svg = svgRef.current.outerHTML;
-    const itemName = barcodeFor?.name || '';
-    const itemPrice = barcodeFor?.price ? `Rs. ${barcodeFor.price}` : '';
+    const itemName  = barcodeFor?.name    || '';
+    const itemCode  = barcodeFor?.barcode || '';
+    const itemPrice = barcodeFor?.price   ? `Rs. ${barcodeFor.price}` : '';
 
-    // Build N label pages — one per physical sticker — separated by page-break-after.
-    // Each .label-page is exactly 38mm × 25mm so the printer never splits a barcode
-    // across two stickers regardless of how many copies are requested.
-    const labelPage = `
-      <div class="label-page">
-        ${itemName ? `<div class="item-name">${itemName}</div>` : ''}
+    // ── One .label-sticker div = one physical 80mm × 50mm sticker ──
+    // page-break-after: always pushes the next copy onto the next label.
+    // :last-child resets it so no blank sticker is wasted at the end.
+    const labelHTML = `
+      <div class="label-sticker">
+        ${itemName  ? `<div class="lbl-name">${itemName}</div>`   : ''}
         <div class="barcode-wrap">${svg}</div>
-        ${itemPrice ? `<div class="item-price">${itemPrice}</div>` : ''}
+        ${itemCode  ? `<div class="lbl-code">${itemCode}</div>`   : ''}
+        ${itemPrice ? `<div class="lbl-price">${itemPrice}</div>` : ''}
       </div>`;
 
-    const allLabels = Array.from({ length: qty }, () => labelPage).join('\n');
+    const allLabels = Array.from({ length: qty }, () => labelHTML).join('\n');
 
     const w = window.open('', '_blank');
     w.document.write(`
       <!DOCTYPE html>
       <html>
         <head>
-          <title>Print Label – ${itemName}</title>
+          <title>Label – ${itemName}</title>
           <style>
-            /* ─── Thermal sticker page: exactly one label per page ─── */
+            /* ── Page = exactly one 80 × 50 mm sticker ── */
             @page {
-              size: 38mm 25mm;
+              size: 80mm 50mm;
               margin: 0mm;
             }
 
@@ -156,17 +165,19 @@ export default function InventoryPage() {
             }
 
             html, body {
-              width: 38mm;
+              width: 80mm;
               background: #fff;
               font-family: Arial, Helvetica, sans-serif;
               color: #000;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
             }
 
-            /* Each label is locked to exactly one physical sticker */
-            .label-page {
-              width: 38mm;
-              height: 25mm;
-              padding: 1.5mm 2mm;
+            /* ── Sticker wrapper: locked to 80 × 50 mm ── */
+            .label-sticker {
+              width: 80mm;
+              height: 50mm;
+              padding: 3mm 4mm;      /* inner breathing room – won't clip edges */
               display: flex;
               flex-direction: column;
               align-items: center;
@@ -174,52 +185,62 @@ export default function InventoryPage() {
               text-align: center;
               overflow: hidden;
 
-              /* Critical: never let a label bleed onto the next sticker */
+              /* Each copy starts on its own physical sticker */
               page-break-after: always;
               break-after: page;
               page-break-inside: avoid;
               break-inside: avoid;
             }
 
-            /* Last label must NOT add a blank trailing page */
-            .label-page:last-child {
+            /* No blank trailing sticker after the last copy */
+            .label-sticker:last-child {
               page-break-after: auto;
               break-after: auto;
             }
 
-            .item-name {
-              font-size: 7.5px;
+            /* Product name – wraps up to 2 lines */
+            .lbl-name {
+              font-size: 11px;
               font-weight: bold;
-              white-space: nowrap;
+              line-height: 1.2;
+              max-width: 72mm;
               overflow: hidden;
               text-overflow: ellipsis;
-              max-width: 34mm;
-              line-height: 1;
-              margin-bottom: 0.5mm;
+              white-space: nowrap;
               color: #000;
+              margin-bottom: 1.5mm;
             }
 
+            /* Barcode SVG quiet-zone + scaling */
             .barcode-wrap {
-              width: 34mm;
+              width: 72mm;           /* 80mm − 2×4mm padding */
               display: flex;
               justify-content: center;
               align-items: center;
             }
 
-            /* Force the JsBarcode SVG to fit exactly inside the sticker */
             .barcode-wrap svg {
               display: block !important;
-              width: 34mm !important;
+              width: 72mm !important; /* fills the usable label width */
               height: auto !important;
-              max-height: 14mm !important;
+              max-height: 26mm !important; /* leaves room for name, code, price */
             }
 
-            .item-price {
-              font-size: 7.5px;
-              font-weight: bold;
-              margin-top: 0.5mm;
-              line-height: 1;
+            /* Barcode digit string (SKU / product code) */
+            .lbl-code {
+              font-size: 9px;
+              font-family: 'Courier New', Courier, monospace;
+              letter-spacing: 0.5px;
               color: #000;
+              margin-top: 1mm;
+            }
+
+            /* Price */
+            .lbl-price {
+              font-size: 11px;
+              font-weight: bold;
+              color: #000;
+              margin-top: 1mm;
             }
           </style>
         </head>
