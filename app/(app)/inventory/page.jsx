@@ -120,45 +120,47 @@ export default function InventoryPage() {
     } catch (e) { toast(e.message, 'error'); }
   }
 
+    // Barcode Print Function — 68mm x 40mm Thermal Label
   function printBarcode() {
     if (!svgRef.current) return;
 
-    const rawQty = prompt('How many labels do you want to print?', '1');
-    if (rawQty === null) return; // cancelled
-    const qty = Math.max(1, Math.min(100, parseInt(rawQty, 10) || 1));
+    const copiesStr = window.prompt('How many labels to print?', '1');
+    if (copiesStr === null) return; // cancelled
+    const copies = Math.max(1, Math.min(100, parseInt(copiesStr, 10) || 1));
 
     const svg = svgRef.current.outerHTML;
-    const itemName  = barcodeFor?.name    || '';
-    const itemCode  = barcodeFor?.barcode || '';
-    const itemPrice = barcodeFor?.price   ? `Rs. ${barcodeFor.price}` : '';
+    const name = (barcodeFor?.name || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+    const price = barcodeFor?.price || 0;
 
-    // ── One .label-container div = one physical 80mm × 50mm sticker ──
-    // page-break-after: always pushes the next copy onto the next label.
-    // :last-child resets it so no blank sticker is wasted at the end.
     const labelHTML = `
-      <div class="label-container">
-        ${itemName  ? `<div class="lbl-name">${itemName}</div>`   : ''}
-        <div class="barcode-wrap">${svg}</div>
-        ${itemCode  ? `<div class="lbl-code">${itemCode}</div>`   : ''}
-        ${itemPrice ? `<div class="lbl-price">${itemPrice}</div>` : ''}
+      <div class="label-page">
+        <div class="label-container">
+          <div class="label-title">${name}</div>
+          ${svg}
+          <div class="label-price">Rs. ${price}</div>
+        </div>
       </div>`;
 
-    const allLabels = Array.from({ length: qty }, () => labelHTML).join('\n');
+    const allLabels = Array(copies).fill(labelHTML).join('');
 
     const w = window.open('', '_blank');
     if (!w) {
-      alert('Pop-up was blocked by your browser. Please allow pop-ups for this site to print labels.');
+      alert('Please allow pop-ups for this website in your browser settings to print barcode labels.');
       return;
     }
+
     w.document.write(`
       <!DOCTYPE html>
       <html>
         <head>
-          <title>Label – ${itemName}</title>
+          <title>Barcode Label — ${name}</title>
           <style>
-            /* ── Page = exactly one 80 × 50 mm sticker in landscape ── */
+            /* FIX 1: "landscape" removed */
             @page {
-              size: 80mm 50mm landscape;
+              size: 68mm 40mm;
               margin: 0;
             }
 
@@ -166,104 +168,135 @@ export default function InventoryPage() {
               margin: 0;
               padding: 0;
               box-sizing: border-box;
-            }
-
-            html, body {
-              width: 80mm;
-              height: 50mm;
-              background: #fff;
-              font-family: Arial, Helvetica, sans-serif;
-              color: #000;
               -webkit-print-color-adjust: exact;
+              color-adjust: exact;
               print-color-adjust: exact;
             }
 
-            /* ── Sticker container: locked to 80 × 50 mm in landscape ── */
-            .label-container {
-              width: 80mm;
-              height: 50mm;
-              box-sizing: border-box;
-              padding: 3mm 4mm;      /* inner breathing room – won't clip edges */
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              justify-content: center;
-              text-align: center;
-              overflow: hidden;
+            html, body {
+              width: 68mm;
+              background: #fff;
+              font-family: Arial, Helvetica, sans-serif;
+            }
 
-              /* Each copy starts on its own physical sticker */
+            .label-page {
+              position: relative;
+              width: 68mm;
+              height: 39mm;
               page-break-after: always;
               break-after: page;
               page-break-inside: avoid;
               break-inside: avoid;
+              overflow: hidden;
             }
 
-            /* No blank trailing sticker after the last copy */
-            .label-container:last-child {
+            /* FIX 2: last-child -> last-of-type */
+            .label-page:last-of-type {
               page-break-after: auto;
               break-after: auto;
             }
 
-            /* Product name – wraps up to 2 lines */
-            .lbl-name {
-              font-size: 11px;
-              font-weight: bold;
-              line-height: 1.2;
-              max-width: 72mm;
+            .label-container {
+              width: 68mm;
+              height: 39mm;
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              justify-content: center;
+              padding: 2mm 3mm;
+              overflow: hidden;
+            }
+
+            .label-container, .label-container * {
+              color: #000000 !important;
+              font-weight: bold !important;
+            }
+
+            .label-title {
+              font-size: 12px;
+              text-align: center;
+              white-space: nowrap;
               overflow: hidden;
               text-overflow: ellipsis;
-              white-space: nowrap;
-              color: #000;
-              margin-bottom: 1.5mm;
+              max-width: 62mm;
+              line-height: 1.2;
+              margin-bottom: 2mm;
             }
 
-            /* Barcode SVG quiet-zone + scaling */
-            .barcode-wrap {
-              width: 72mm;           /* 80mm − 2×4mm padding */
-              display: flex;
-              justify-content: center;
-              align-items: center;
-            }
-
-            .barcode-wrap svg {
-              display: block !important;
-              width: 72mm !important; /* fills the usable label width */
+            svg {
+              display: block;
+              width: 90% !important;
+              max-width: 62mm !important;
               height: auto !important;
-              max-height: 26mm !important; /* leaves room for name, code, price */
+              max-height: 17mm !important;
+              margin: 0 auto;
             }
 
-            /* Barcode digit string (SKU / product code) */
-            .lbl-code {
-              font-size: 9px;
-              font-family: 'Courier New', Courier, monospace;
-              letter-spacing: 0.5px;
-              color: #000;
-              margin-top: 1mm;
+            .label-price {
+              font-size: 13px;
+              margin-top: 1.5mm;
+              text-align: center;
             }
 
-            /* Price */
-            .lbl-price {
-              font-size: 11px;
-              font-weight: bold;
-              color: #000;
-              margin-top: 1mm;
+            /* On-screen preview (no printer needed) */
+            @media screen {
+              html, body {
+                width: auto;
+                background: #6b6b6b;
+              }
+              .toolbar {
+                position: sticky;
+                top: 0;
+                z-index: 10;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 12px;
+                padding: 10px 14px;
+                background: #222;
+                color: #fff;
+                font: 14px Arial, Helvetica, sans-serif;
+              }
+              .toolbar button {
+                padding: 8px 18px;
+                border: 0;
+                border-radius: 6px;
+                background: #8ab4f8;
+                color: #000;
+                font-size: 14px;
+                font-weight: bold;
+                cursor: pointer;
+              }
+              .label-page {
+                margin: 16px auto;
+                background: #fff;
+                box-shadow: 0 0 0 1px #000, 0 4px 14px rgba(0,0,0,.45);
+              }
+            }
+
+            @media print {
+              @page {
+                size: 68mm 40mm;
+                margin: 0;
+              }
+              .toolbar {
+                display: none !important;
+              }
             }
           </style>
         </head>
         <body>
+          <div class="toolbar">
+            <span>Label size: 68 × 40 mm — ${copies} label(s). Preview shows the real label shape.</span>
+            <button type="button" onclick="window.print()">Print</button>
+          </div>
           ${allLabels}
-          <script>
-            window.onload = function () {
-              window.print();
-              window.onafterprint = function () { window.close(); };
-            };
-          <\/script>
         </body>
       </html>
     `);
     w.document.close();
-  }
-
+  }  
+  
   return (
     <>
       <h1 className="page-title">Inventory</h1>
